@@ -162,8 +162,8 @@ $ npm install -g yarn
 Check out the code from this repository using this command:
 
 ```bash
-$ mkdir springboot-eks-migration && cd springboot-eks-migration
-$ git clone git@ssh.gitlab.aws.dev:am3-app-modernization-gsp/eks/springboot-eks-migration.git .
+$ mkdir eks-blue-green-deployment && cd eks-blue-green-deployment
+$ git clone https://github.com/hariohmprasath/eks-blue-green-deployment.git.
 ```
 
 > Note: Source code for 'Weather service' is available under [src\eks-weather-service](src/eks-weather-service) folder
