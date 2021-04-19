@@ -193,19 +193,19 @@ Once the deployment is successful you will see the following output:
 
 Outputs:
 blue-green-stack.BlueGreenDeployCodeCommitCloneUrlSsh768B3B34 = https://git-codecommit.us-east-1.amazonaws.com/v1/repos/code-base-microservice
-blue-green-stack.BlueGreenDeployCodeCommitRepoArn421FE968 = arn:aws:codecommit:us-east-1:775492342640:code-base-microservice
+blue-green-stack.BlueGreenDeployCodeCommitRepoArn421FE968 = arn:aws:codecommit:us-east-1:xxxxxx:code-base-microservice
 blue-green-stack.BlueGreenDeployCodeCommitRepoName752219DF = code-base-microservice
 blue-green-stack.BlueGreenDeployCodePipeline0AAEF314 = CfnPipeline
-blue-green-stack.BlueGreenDeployECRRepo9647448D = 775492342640.dkr.ecr.us-east-1.amazonaws.com/blue-green-stack-bluegreendeployecrrepo47a51719-kxpk5uyg0xpp
+blue-green-stack.BlueGreenDeployECRRepo9647448D = xxxxxx.dkr.ecr.us-east-1.amazonaws.com/blue-green-stack-bluegreendeployecrrepo47a51719-kxpk5uyg0xpp
 blue-green-stack.BlueGreenDeployRDSHostnameC2835BEA = blue-green-stack-bluegreendeploydb3ea0507a-1e3sa5ib6vv9b.cluster-cqsh75yzp1ny.us-east-1.rds.amazonaws.com
 blue-green-stack.BlueGreenDeployRDSSecretARNBA257FC9 = bluegreenstackBlueGreenDepl-7TyZgIoOP8GX-aSziD9
 blue-green-stack.BlueGreenDeployeksclusterClusterName06FF4E44 = BlueGreenDeployeksclusterAE9CBEE2-0cc90bf403054941b8ea5730e950d8e5
-blue-green-stack.BlueGreenDeployeksclusterConfigCommandCA1B3F13 = aws eks update-kubeconfig --name BlueGreenDeployeksclusterAE9CBEE2-0cc90bf403054941b8ea5730e950d8e5 --region us-east-1 --role-arn arn:aws:iam::775492342640:role/blue-green-stack-BlueGreenDeployadminRole38E21A76-1KKDNHTNDFTLI
-blue-green-stack.BlueGreenDeployeksclusterGetTokenCommand94817BA1 = aws eks get-token --cluster-name BlueGreenDeployeksclusterAE9CBEE2-0cc90bf403054941b8ea5730e950d8e5 --region us-east-1 --role-arn arn:aws:iam::775492342640:role/blue-green-stack-BlueGreenDeployadminRole38E21A76-1KKDNHTNDFTLI
-blue-green-stack.BlueGreenDeployeksclusterMastersRoleArn58A7C6B3 = arn:aws:iam::775492342640:role/blue-green-stack-BlueGreenDeployadminRole38E21A76-1KKDNHTNDFTLI
+blue-green-stack.BlueGreenDeployeksclusterConfigCommandCA1B3F13 = aws eks update-kubeconfig --name BlueGreenDeployeksclusterAE9CBEE2-0cc90bf403054941b8ea5730e950d8e5 --region us-east-1 --role-arn arn:aws:iam::xxxxxx:role/blue-green-stack-BlueGreenDeployadminRole38E21A76-1KKDNHTNDFTLI
+blue-green-stack.BlueGreenDeployeksclusterGetTokenCommand94817BA1 = aws eks get-token --cluster-name BlueGreenDeployeksclusterAE9CBEE2-0cc90bf403054941b8ea5730e950d8e5 --region us-east-1 --role-arn arn:aws:iam::xxxxxx:role/blue-green-stack-BlueGreenDeployadminRole38E21A76-1KKDNHTNDFTLI
+blue-green-stack.BlueGreenDeployeksclusterMastersRoleArn58A7C6B3 = arn:aws:iam::xxxxxx:role/blue-green-stack-BlueGreenDeployadminRole38E21A76-1KKDNHTNDFTLI
 
 Stack ARN:
-arn:aws:cloudformation:us-east-1:775492342640:stack/blue-green-stack/61d0f6c0-93f4-11eb-83d2-124b5c3af171
+arn:aws:cloudformation:us-east-1:xxxxxx:stack/blue-green-stack/61d0f6c0-93f4-11eb-83d2-124b5c3af171
 ```
 
 > **Note:** Make sure to run the `ClusterConfig` command available part of the CDK output. This will add the newly created AWS EKS cluster to the kubeconfig so we can run kubectl command using this.
