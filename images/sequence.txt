@@ -1,0 +1,16 @@
+title Interaction between different personas
+
+participant Developer
+participant DevOps Engineer
+participant QA
+participant Product Onwer
+participant CodePipeline
+
+Developer-->Developer:  * Writes application code \n * Creates Docker file \n * Defines application infrastructure via \n   k8s manifests code \n * Pull request reviewed and approved
+DevOps Engineer->CodePipeline: Kicks off the build
+CodePipeline-->CodePipeline: Builds and deploys blue & \n green (if not exists) version of \n the application or updates non-prod \nversion of the application
+CodePipeline->QA: Communicates the availability of new build
+QA-->QA: Run integration tests \nwith the blue version of \nthe application
+QA->Product Onwer: Communicates test execution status
+Product Onwer->CodePipeline: Manual Approve build
+CodePipeline-->CodePipeline: Switch blue and green\n version of the application

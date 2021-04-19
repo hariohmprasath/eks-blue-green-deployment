@@ -1,0 +1,99 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: weather-${DEPLOYMENT}
+data:
+  DEFAULT_CITY: "Milpitas"
+  DEFAULT_CITY_TEMP: "20"
+  LOW_NUMBER: "10"
+  HIGH_NUMBER: "40"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-${DEPLOYMENT}
+spec:
+  selector:
+    matchLabels:
+      app: weather-${DEPLOYMENT}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: weather-${DEPLOYMENT}
+    spec:
+      containers:
+        - image: ${IMAGE_URL}
+          imagePullPolicy: Always
+          name: weather-${DEPLOYMENT}
+          securityContext:
+            runAsUser: 0
+          ports:
+            - containerPort: 80
+              hostPort: 80
+              protocol: TCP
+          env:
+            - name: DEFAULT_CITY
+              valueFrom:
+                configMapKeyRef:
+                  name: weather-${DEPLOYMENT}
+                  key: DEFAULT_CITY
+            - name: DEFAULT_CITY_TEMP
+              valueFrom:
+                configMapKeyRef:
+                  name: weather-${DEPLOYMENT}
+                  key: DEFAULT_CITY_TEMP
+            - name: LOW_NUMBER
+              valueFrom:
+                configMapKeyRef:
+                  name: weather-${DEPLOYMENT}
+                  key: LOW_NUMBER
+            - name: HIGH_NUMBER
+              valueFrom:
+                configMapKeyRef:
+                  name: weather-${DEPLOYMENT}
+                  key: HIGH_NUMBER
+            - name: RDS_USERNAME
+              value: ${RDS_USERNAME}
+            - name: RDS_PASSWORD
+              value: ${RDS_PASSWORD}
+            - name: RDS_HOSTNAME
+              value: rds-service-${DEPLOYMENT}
+          livenessProbe:
+            httpGet:
+              path: "/actuator/health"
+              port: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: weather-${DEPLOYMENT}
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  type: NodePort
+  selector:
+    app: weather-${DEPLOYMENT}
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: weather-${DEPLOYMENT}
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/healthcheck-port: "80"
+    alb.ingress.kubernetes.io/healthcheck-path: "/actuator/health"
+    alb.ingress.kubernetes.io/healthcheck-protocol: "HTTP"
+    alb.ingress.kubernetes.io/target-type: "ip"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /*
+            backend:
+              serviceName: weather-${DEPLOYMENT}
+              servicePort: 80
