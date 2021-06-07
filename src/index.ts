@@ -129,7 +129,7 @@ export class BlueGreenDeployConstruct extends cdk.Construct {
     const pipeline = this.createPipeline(codeRepository, cluster, ecrRepo, db);
 
     // CDK output
-    new cdk.CfnOutput(this, 'RDS-Secret-ARN', { value: db.secret!.secretName});
+    new cdk.CfnOutput(this, 'RDS-Secret-ARN', { value: db.secret!.secretName });
     new cdk.CfnOutput(this, 'RDS-Hostname', { value: db.clusterEndpoint.hostname });
     new cdk.CfnOutput(this, 'CodePipeline', { value: pipeline.pipelineName });
     new cdk.CfnOutput(this, 'CodeCommitRepoName', { value: codeRepository.repositoryName });
@@ -236,12 +236,12 @@ export class BlueGreenDeployConstruct extends cdk.Construct {
       },
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
-        phases: {   
+        phases: {
           pre_build: {
             commands: [
-              'export TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION}',              
+              'export TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION}',
             ],
-          },       
+          },
           post_build: {
             commands: [
               'mvn clean install',
@@ -290,7 +290,7 @@ export class BlueGreenDeployConstruct extends cdk.Construct {
             ],
           },
           post_build: {
-            commands: [ 
+            commands: [
               '#!/bin/bash',
               'export TMP=/tmp/tmpDeploy.yaml',
               'export RDS_USERNAME=$(aws secretsmanager get-secret-value --secret-id '+db.secret!.secretName+' | jq .SecretString | jq fromjson.username)',
@@ -298,9 +298,9 @@ export class BlueGreenDeployConstruct extends cdk.Construct {
               'export RDS_HOSTNAME=$(aws secretsmanager get-secret-value --secret-id '+db.secret!.secretName+' | jq .SecretString | jq fromjson.host\)',
               'export IMAGE_URL='+ecrRepo.repositoryUri+':${TAG}',
               'export BLUE_COUNT=$(kubectl get svc | grep ${SERVICE_NAME}-blue | wc -l)',
-              'export GREENSERVICE=$(kubectl get svc ${SERVICE_NAME}-green -o json | jq -r .spec.selector.app)',                
+              'export GREENSERVICE=$(kubectl get svc ${SERVICE_NAME}-green -o json | jq -r .spec.selector.app)',
               'if [ ! $GREENSERVICE ]; then export DEPLOYMENT=green; for filename in k8s/*.yaml; do envsubst < $filename > ${TMP} | kubectl apply -f ${TMP} || continue ; done; fi;',
-              'if [ ${BLUE_COUNT} -eq 0 ]; then export DEPLOYMENT=blue; for filename in k8s/*.yaml; do envsubst < $filename > ${TMP} | kubectl apply -f ${TMP} || continue ; done; fi;',                            
+              'if [ ${BLUE_COUNT} -eq 0 ]; then export DEPLOYMENT=blue; for filename in k8s/*.yaml; do envsubst < $filename > ${TMP} | kubectl apply -f ${TMP} || continue ; done; fi;',
               'if [ $GREENSERVICE ]; then export TARGET_DEPLOYMENT=$(kubectl get svc ${SERVICE_NAME}-blue -o json | jq -r .spec.selector.app) ; export TARGET_CONTAINER=$(kubectl get deployment ${TARGET_DEPLOYMENT} -o json | jq -r .spec.template.spec.containers[0].name); kubectl set image deployment/${TARGET_DEPLOYMENT} ${TARGET_CONTAINER}=${IMAGE_URL} --record; fi',
               'echo "Initial Deploy complete"',
             ],
@@ -309,8 +309,8 @@ export class BlueGreenDeployConstruct extends cdk.Construct {
       }),
     });
 
-    cluster.awsAuth.addMastersRole(project.role!);    
-    project.role?.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('SecretsManagerReadWrite'));    
+    cluster.awsAuth.addMastersRole(project.role!);
+    project.role?.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('SecretsManagerReadWrite'));
     project.addToRolePolicy(new iam.PolicyStatement({
       actions: ['eks:DescribeCluster'],
       resources: [`${cluster.clusterArn}`],
@@ -348,10 +348,10 @@ export class BlueGreenDeployConstruct extends cdk.Construct {
           },
           post_build: {
             commands: [
-              "export BLUE_SERVICE=$(kubectl get svc ${SERVICE_NAME}-blue -o json | jq -r .spec.selector.app)",
-              "export GREEN_SERVICE=$(kubectl get svc ${SERVICE_NAME}-green -o json | jq -r .spec.selector.app)",              
-              "kubectl patch svc ${SERVICE_NAME}-blue -p '{\"spec\":{\"selector\": {\"app\": \"'$GREEN_SERVICE'\"}}}'",              
-              "kubectl patch svc ${SERVICE_NAME}-green -p '{\"spec\":{\"selector\": {\"app\": \"'$BLUE_SERVICE'\"}}}'",              
+              'export BLUE_SERVICE=$(kubectl get svc ${SERVICE_NAME}-blue -o json | jq -r .spec.selector.app)',
+              'export GREEN_SERVICE=$(kubectl get svc ${SERVICE_NAME}-green -o json | jq -r .spec.selector.app)',
+              "kubectl patch svc ${SERVICE_NAME}-blue -p '{\"spec\":{\"selector\": {\"app\": \"'$GREEN_SERVICE'\"}}}'",
+              "kubectl patch svc ${SERVICE_NAME}-green -p '{\"spec\":{\"selector\": {\"app\": \"'$BLUE_SERVICE'\"}}}'",
               'echo "Blue green swap complete"',
             ],
           },
@@ -387,15 +387,7 @@ export class BlueGreenDeployConstruct extends cdk.Construct {
       effect: iam.Effect.ALLOW,
       actions: [
         'iam:CreateServiceLinkedRole',
-        'ec2:DescribeAccountAttributes',
-        'ec2:DescribeAddresses',
-        'ec2:DescribeInternetGateways',
-        'ec2:DescribeVpcs',
-        'ec2:DescribeSubnets',
-        'ec2:DescribeSecurityGroups',
-        'ec2:DescribeInstances',
-        'ec2:DescribeNetworkInterfaces',
-        'ec2:DescribeTags',
+        'ec2:*',
         'elasticloadbalancing:DescribeLoadBalancers',
         'elasticloadbalancing:DescribeLoadBalancerAttributes',
         'elasticloadbalancing:DescribeListeners',
@@ -432,71 +424,6 @@ export class BlueGreenDeployConstruct extends cdk.Construct {
         'shield:DeleteProtection',
       ],
       resources: ['*'],
-    }));
-
-    serviceAccount.serviceAccount.addToPolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        'ec2:AuthorizeSecurityGroupIngress',
-        'ec2:RevokeSecurityGroupIngress',
-        'ec2:AuthorizeSecurityGroupEgress',
-        'ec2:RevokeSecurityGroupEgress',
-      ],
-      resources: ['*'],
-    }));
-
-    serviceAccount.serviceAccount.addToPolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        'ec2:CreateSecurityGroup',
-      ],
-      resources: ['*'],
-    }));
-
-    serviceAccount.serviceAccount.addToPolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        'ec2:CreateTags',
-      ],
-      resources: ['arn:aws:ec2:*:*:security-group/*'],
-      conditions: {
-        StringEquals: {
-          'ec2:CreateAction': 'CreateSecurityGroup',
-        },
-        Null: {
-          'aws:RequestTag/elbv2.k8s.aws/cluster': 'false',
-        },
-      },
-    }));
-
-    serviceAccount.serviceAccount.addToPolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        'ec2:CreateTags',
-        'ec2:DeleteTags',
-      ],
-      resources: ['arn:aws:ec2:*:*:security-group/*'],
-      conditions: {
-        Null: {
-          'aws:RequestTag/elbv2.k8s.aws/cluster': 'true',
-          'aws:ResourceTag/elbv2.k8s.aws/cluster': 'false',
-        },
-      },
-    }));
-
-    serviceAccount.serviceAccount.addToPolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        'ec2:AuthorizeSecurityGroupIngress',
-        'ec2:RevokeSecurityGroupIngress',
-        'ec2:DeleteSecurityGroup',
-      ],
-      resources: ['*'],
-      conditions: {
-        Null: {
-          'aws:ResourceTag/elbv2.k8s.aws/cluster': 'false',
-        },
-      },
     }));
 
     serviceAccount.serviceAccount.addToPolicy(new iam.PolicyStatement({

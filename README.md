@@ -145,7 +145,7 @@ Here is the highlevel view of the architecture:
 * Docker desktop needs to be installed in the local laptop, you can read more about it [here](https://www.docker.com/products/docker-desktop)
 
 ```bash
-$ yarn version
+yarn version
 ```
 
 **Output**
@@ -154,7 +154,7 @@ $ yarn version
 If ```Yarn``` is not installed run the following command
 
 ```bash
-$ npm install -g yarn
+npm install -g yarn
 ```
 
 ### Build
@@ -162,8 +162,8 @@ $ npm install -g yarn
 Check out the code from this repository using this command:
 
 ```bash
-$ mkdir eks-blue-green-deployment && cd eks-blue-green-deployment
-$ git clone https://github.com/hariohmprasath/eks-blue-green-deployment.git.
+mkdir springboot-eks-migration && cd springboot-eks-migration
+git clone git@ssh.gitlab.aws.dev:am3-app-modernization-gsp/eks/springboot-eks-migration.git .
 ```
 
 > Note: Source code for 'Weather service' is available under [src\eks-weather-service](src/eks-weather-service) folder
@@ -175,7 +175,7 @@ Code for the sample application using this CDK construct is available in `src/in
 ```bash
 # Bootstrap CDK (ONLY ONCE, if you have already done this you can skip this part)
 # Subsitute your AWS Account Id and AWS region in the command below
-$ cdk bootstrap \
+cdk bootstrap \
     --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess \
     aws://<AWS Account Id>/<AWS_REGION>
 ```
@@ -183,7 +183,7 @@ $ cdk bootstrap \
 Run the following command to start the deployment
 
 ```bash
-$ cdk deploy --require-approval never
+cdk deploy --require-approval never
 ```
 
 Once the deployment is successful you will see the following output:
@@ -215,8 +215,8 @@ arn:aws:cloudformation:us-east-1:xxxxxx:stack/blue-green-stack/61d0f6c0-93f4-11e
 Execute the below commands to initialize the git repo and push the application code to AWS codecommit
 
 ```bash
-$ chmod 777 gitsetup.sh
-$ ./gitsetup.sh <<git-ssh>>
+chmod 777 gitsetup.sh
+./gitsetup.sh <<git-ssh>>
 ```
 
 > Note: Replace `git-ssh` with codecommit SSH URL that we got in the previous step
@@ -226,7 +226,7 @@ $ ./gitsetup.sh <<git-ssh>>
 Unit testcases can be executed by running the following command from the root directory
 
 ```bash
-$ yarn run v1.22.10
+yarn run v1.22.10
 
 $ npx projen test
 🤖 test | rm -fr lib/
@@ -261,7 +261,7 @@ Here are the steps for first time deploy
 3. Once approved after couple of minutes you can see the sample application both in the blue and green version of the artifacts (deployemnt, service and ingress). Run the following command to get the load balancer url by running the following command:
 
     ```bash
-    $ kubectl get ingress
+    kubectl get ingress
     ```
 
     **Output**
@@ -274,8 +274,8 @@ Here are the steps for first time deploy
 4. Run the following command using the `curl` and `Loadbalancerurl` to get the application version details:
 
     ```bash
-    $ curl <<weather-blue-loadbalancer-url>>/user/version
-    $ curl <<weather-green-loadbalancer-url>>/user/version
+    curl <<weather-blue-loadbalancer-url>>/user/version
+    curl <<weather-green-loadbalancer-url>>/user/version
     ```
 
     **Output**
@@ -289,39 +289,50 @@ Here are the steps for first time deploy
 1. Open [application.properties](src/gitrepo/src/main/resources/application.properties) and update the `version` attribute to `v2`. Save the changes and run the following command to commit & push the changes to the CodeCommit from the root directory
 
     ```bash
-    $ cd src/gitrepo/
-    $ git add .
-    $ git commint -m "version changes"
-    $ git push
+    cd src/gitrepo/
+    git add .
+    git commint -m "version changes"
+    git push
     ```
 
-2. Performing the previous step will automatically trigger the codepipeline, so we need to login to AWS console [https://console.aws.amazon.com/codesuite/codepipeline/pipelines/](https://console.aws.amazon.com/codesuite/codepipeline/pipelines/) click on the pipeline name, which will be in progress. Once the pipeline reaching `ApproveStage` it run the follwing command to check whether the latest version of the application is built and deployed to `blue_ingress`:
+2. Performing the previous step will automatically trigger the codepipeline, so we need to login to AWS console [https://console.aws.amazon.com/codesuite/codepipeline/pipelines/](https://console.aws.amazon.com/codesuite/codepipeline/pipelines/) click on the pipeline name, which will be in progress. Once the pipeline reaching `ApproveStage`, run the follwing command to check whether the latest version of the application is built and deployed to `blue_ingress`:
 
-    2.2 Run the following curl command on `Blue_ingress` to get the version details of the deployed application:
+    Run the following curl command on `Blue_ingress` to get the version details of the deployed application:
     ```bash
-    $ curl <<weather-blue-loadbalancer-url>>/user/version
+    curl <<weather-blue-loadbalancer-url>>/user/version
     ```
 
     **Output**
     ```bash
-    $ v2
+    v2
     ```
 
-    > As you can see the latest changes are deployed and available for QA testing
+    Make sure all the changes are rolled out to pods belonging to the deployment, you shouldn't see any pods in `Pending` stage. You can check that by running the following command:
+
+    ```bash
+    kubectl get pods
+    ```
+
+    **Output**
+    ```bash
+    weather-blue-66dc684d59-c5xs7                                     1/1     Running   1          1m
+    weather-green-58bf6b7b44-zrzvw                                    1/1     Running   1          1m
+    ```
+
 3. Manual Approve - Assuming all the testing is done using the `Blue_ingress` URL, we will proceed with approving the build by clicking on "Review" button, type in the comments and press "Approve".
 
 4. Once approved you can see the new version of the application automatically swapped to `Green_ingress`(prod) and old version swapped to `Blue_ingress`(non-prod). You can validate this by running the `curl` command on the both the `LoadbalancerURL` created by blue and green ingress, like below:
 
     ```bash
-    $ curl <<weather-blue-loadbalancer-url>>/user/version
-    $ curl <<weather-green-loadbalancer-url>>/user/version
+    curl <<weather-blue-loadbalancer-url>>/user/version
+    curl <<weather-green-loadbalancer-url>>/user/version
     ```
 
     **Output**
     ```bash
-    $ v1
-    $ v2
-    ```    
+    v1
+    v2
+    ```
     > Note: In case we notice any issue with the newly deployed application, we can easily swap them by running a simple `kubectl patch svc` command as both the version of the applications are still available.
 
 ## Cleanup
